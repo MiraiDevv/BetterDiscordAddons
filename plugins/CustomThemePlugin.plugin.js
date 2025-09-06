@@ -2,7 +2,7 @@
  * @name CustomThemePlugin
  * @version 1.0.0
  * @description Adds a custom theme feature to Discord with live preview and customization
- * @author Mirai
+ * @author MiraiDevv
  * @authorId I have no idea where to get the author id, I looked in the documentation and there was nothing written about it.
  * @website https://github.com/MiraiDevv/BetterDiscordAddons
  * @source https://github.com/MiraiDevv/BetterDiscordAddons
@@ -112,7 +112,7 @@ module.exports = class CustomThemePlugin {
     getName() {return "CustomThemePlugin";}
     getDescription() {return "Adds a custom theme feature to Discord with live preview and customization";}
     getVersion() {return "1.0.0";}
-    getAuthor() {return "YourName";}
+    getAuthor() {return "MiraiDevv";}
 
     start() {
         try {
