@@ -23,7 +23,7 @@ module.exports = class CustomThemePlugin {
     }
 
     getAuthor() {
-        return "YourName";
+        return "MiraiDevv";
     }
 
     constructor(meta) {
