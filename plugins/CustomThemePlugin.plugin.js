@@ -389,21 +389,30 @@ module.exports = class CustomThemePlugin {
             return `rgba(${R < 255 ? (R < 0 ? 0 : R) : 255},${G < 255 ? (G < 0 ? 0 : G) : 255},${B < 255 ? (B < 0 ? 0 : B) : 255},${alpha})`;
         };
 
-        // Export a broader set of variables including a tonal scale (Tailwind-like) and some marketplace/theme variables
+        // Usar a escala tonal para variáveis CSS --custom-50 ... --custom-900
         const scale = colors.scale || {};
         const isLight = (this.settings.mode === 'light');
-        // when in light mode we want backgrounds/text to be fully opaque so underlying dark UI doesn't bleed through
         const alphaForBackgrounds = isLight ? 1 : opacity;
         const scaleVars = [];
-        // Use opaque scale values (alpha=1) so light backgrounds are solid
         [50, 100, 200, 300, 400, 500, 600, 700, 800, 900].forEach(k => {
-            const v = (scale[k]) ? hexToRgba(scale[k], 1) : 'transparent';
-            scaleVars.push(`--tw-primary-${k}: ${v};`);
+            const v = scale[k] ? scale[k] : 'transparent';
+            scaleVars.push(`--custom-${k}: ${v};`);
         });
 
-        // Force background/text to be opaque (alpha=1) to avoid underlying Discord dark canvas showing through
+        // Forçar opacidade total para fundo/texto no modo light
         const bgOpaque = hexToRgba(colors.background, 1);
-        const textOpaque = hexToRgba(colors.text, 1);
+        // Para texto, garantir contraste: preto no light, branco no dark
+        const textOpaque = isLight ? '#23272A' : hexToRgba(colors.text, 1);
+
+        // Cores de texto para contraste em modo light
+        const textMuted = isLight ? '#4F5660' : adjustColor(colors.text, -30, alphaForBackgrounds);
+        const headerPrimary = isLight ? '#23272A' : textOpaque;
+        const headerSecondary = isLight ? '#4F5660' : adjustColor(colors.text, -30, alphaForBackgrounds);
+        const interactiveNormal = isLight ? '#23272A' : textOpaque;
+        const channelsDefault = isLight ? '#4F5660' : adjustColor(colors.text, -30, alphaForBackgrounds);
+
+        // Botões: texto escuro no light, branco no dark
+        const buttonText = isLight ? '#23272A' : '#fff';
 
         return `
             /* Custom Theme CSS Variables */
@@ -414,77 +423,119 @@ module.exports = class CustomThemePlugin {
                 --custom-accent: ${hexToRgba(colors.accent, alphaForBackgrounds)};
                 --custom-background: ${bgOpaque};
                 --custom-text: ${textOpaque};
-                /* Tailwind-like tonal scale for the base color */
                 ${scaleVars.join('\n                ')}
-                /* Marketplace/theme variables (Dark+ and similar) */
                 --darkplus-bg: ${hexToRgba(colors.tertiary, 1)};
                 --darkplus-bg2: ${hexToRgba(colors.secondary, 1)};
                 --darkplus-sec: ${hexToRgba(colors.primary, 1)};
                 --darkplus-links: ${hexToRgba(colors.accent, 1)};
             }
 
-            /* Apply custom theme to Discord elements */
             .theme-dark, .theme-light {
-                --background-primary: ${bgOpaque} !important;
-                --background-secondary: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --background-secondary-alt: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --background-tertiary: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
-                --background-accent: ${hexToRgba(colors.accent, alphaForBackgrounds)} !important;
-                --background-floating: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
+                --background-primary: var(--custom-900) !important;
+                --background-secondary: var(--custom-700) !important;
+                --background-secondary-alt: var(--custom-600) !important;
+                --background-tertiary: var(--custom-500) !important;
+                --background-accent: var(--custom-400) !important;
+                --background-floating: var(--custom-300) !important;
                 --text-normal: ${textOpaque} !important;
-                --text-muted: ${adjustColor(colors.text, -30, alphaForBackgrounds)} !important;
-                --header-primary: ${textOpaque} !important;
-                --header-secondary: ${adjustColor(colors.text, -30, alphaForBackgrounds)} !important;
-                --interactive-normal: ${textOpaque} !important;
-                --interactive-hover: ${hexToRgba(colors.primary, alphaForBackgrounds)} !important;
-                --interactive-active: ${hexToRgba(colors.primary, alphaForBackgrounds)} !important;
-                --interactive-muted: ${adjustColor(colors.text, -50, alphaForBackgrounds)} !important;
-                --channels-default: ${adjustColor(colors.text, -30, alphaForBackgrounds)} !important;
-                --brand-experiment: ${hexToRgba(colors.primary, alphaForBackgrounds)} !important;
-                --button-secondary-background: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --button-secondary-background-hover: ${adjustColor(colors.secondary, 10, alphaForBackgrounds)} !important;
-                --button-secondary-background-active: ${adjustColor(colors.secondary, 20, alphaForBackgrounds)} !important;
+                --text-muted: ${textMuted} !important;
+                --header-primary: ${headerPrimary} !important;
+                --header-secondary: ${headerSecondary} !important;
+                --interactive-normal: ${interactiveNormal} !important;
+                --interactive-hover: var(--custom-200) !important;
+                --interactive-active: var(--custom-100) !important;
+                --interactive-muted: ${isLight ? '#C7CCD1' : adjustColor(colors.text, -50, alphaForBackgrounds)} !important;
+                --channels-default: ${channelsDefault} !important;
+                --brand-experiment: var(--custom-500) !important;
+                --button-secondary-background: var(--custom-600) !important;
+                --button-secondary-background-hover: var(--custom-500) !important;
+                --button-secondary-background-active: var(--custom-400) !important;
                 --button-danger-background: rgba(240,71,71,${alphaForBackgrounds}) !important;
                 --button-danger-background-hover: rgba(240,71,71,${alphaForBackgrounds}) !important;
                 --button-danger-background-active: rgba(240,71,71,${alphaForBackgrounds}) !important;
-                --scrollbar-thin-thumb: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
+                --scrollbar-thin-thumb: var(--custom-700) !important;
                 --scrollbar-thin-track: transparent !important;
-                --scrollbar-auto-thumb: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --scrollbar-auto-track: ${adjustColor(colors.background, -10, alphaForBackgrounds)} !important;
-                --channeltextarea-background: ${adjustColor(colors.background, 5, alphaForBackgrounds)} !important;
-                --activity-card-background: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --deprecated-card-bg: ${hexToRgba(colors.secondary, alphaForBackgrounds)} !important;
-                --deprecated-card-editable-bg: ${adjustColor(colors.secondary, 5, alphaForBackgrounds)} !important;
-                --deprecated-text-input-bg: ${hexToRgba(colors.background, alphaForBackgrounds)} !important;
-                --deprecated-text-input-border: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
-                --deprecated-text-input-border-hover: ${hexToRgba(colors.primary, alphaForBackgrounds)} !important;
-                --deprecated-text-input-prefix: ${hexToRgba(colors.accent, alphaForBackgrounds)} !important;
+                --scrollbar-auto-thumb: var(--custom-700) !important;
+                --scrollbar-auto-track: var(--custom-900) !important;
+                --channeltextarea-background: var(--custom-800) !important;
+                --activity-card-background: var(--custom-600) !important;
+                --deprecated-card-bg: var(--custom-600) !important;
+                --deprecated-card-editable-bg: var(--custom-500) !important;
+                --deprecated-text-input-bg: var(--custom-800) !important;
+                --deprecated-text-input-border: var(--custom-700) !important;
+                --deprecated-text-input-border-hover: var(--custom-500) !important;
+                --deprecated-text-input-prefix: var(--custom-400) !important;
             }
 
-            /* Style specific Discord elements */
-            .sidebar-2K8pFh {
-                background-color: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
+            /* Ajuste de cor do texto dos botões para modo light */
+            .theme-light .button-1YfofB.buttonColor-7qQbGO {
+                color: #23272A !important;
+            }
+            .theme-dark .button-1YfofB.buttonColor-7qQbGO {
+                color: #fff !important;
             }
 
-            .container-3w7J-x, .panels-j1Uci_ {
-                background-color: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
+            /* Style specific Discord elements and dynamic classes */
+            [class*="sidebar"], [class*="container"], [class*="chat"], [class*="members"], [class*="panels"], [class*="content"], [class*="toolbar"], [class*="title"], [class*="modal"], [class*="menu"], [class*="popout"], [class*="contextMenu"], [class*="input"], [class*="searchBar"], [class*="button"], [class*="checkbox"], [class*="radio"], [class*="slider"], [class*="bar"], [class*="root"], [class*="header"] {
+                transition: background 0.2s, color 0.2s, border-color 0.2s;
+            }
+            [class*="sidebar"] {
+                background-color: var(--custom-800) !important;
+            }
+            [class*="container"] {
+                background-color: var(--custom-700) !important;
+            }
+            [class*="members"] {
+                background-color: var(--custom-700) !important;
+            }
+            [class*="chat"] {
+                background-color: var(--custom-900) !important;
+            }
+            [class*="channelTextArea"] {
+                background-color: var(--custom-800) !important;
+            }
+            [class*="button"] {
+                background-color: var(--custom-500) !important;
+                color: ${buttonText} !important;
+                border-color: var(--custom-700) !important;
+            }
+            [class*="button"]:hover {
+                background-color: var(--custom-400) !important;
+            }
+            [class*="button"]:active {
+                background-color: var(--custom-300) !important;
+            }
+            [class*="checkbox"][aria-checked="true"] [class*="checkboxInner"] {
+                background-color: var(--custom-500) !important;
+                border-color: var(--custom-500) !important;
+            }
+            [class*="radioSelection"][aria-checked="true"] {
+                background-color: var(--custom-500) !important;
+                border-color: var(--custom-500) !important;
+            }
+            [class*="slider"] [class*="bar"] {
+                background: var(--custom-700) !important;
+            }
+            [class*="slider"] [class*="barFill"] {
+                background: var(--custom-500) !important;
             }
 
-            .members-1998pB {
-                background-color: ${hexToRgba(colors.tertiary, alphaForBackgrounds)} !important;
+            /* Inputs, selects, popouts, menus, modals, tooltips, headers, etc */
+            input, textarea, select, [class*="inputDefault"], [class*="input-"], [class*="searchBar"], [class*="searchBarComponent"] {
+                background-color: var(--custom-800) !important;
+                color: ${textOpaque} !important;
+                border-color: var(--custom-500) !important;
             }
-
-            .chat-3bRxxu {
-                background-color: ${bgOpaque} !important;
+            [class*="menu"], [class*="contextMenu"], [class*="popout"] {
+                background-color: var(--custom-700) !important;
+                color: ${textOpaque} !important;
             }
-
-            .channelTextArea-rNsIhG {
-                background-color: ${adjustColor(colors.background, 5, alphaForBackgrounds)} !important;
+            [class*="modal"], [class*="root"] {
+                background-color: var(--custom-900) !important;
+                color: ${textOpaque} !important;
             }
-
-            .button-1YfofB.buttonColor-7qQbGO {
-                background-color: ${hexToRgba(colors.primary, alphaForBackgrounds)} !important;
-                color: white !important;
+            [class*="header"], [class*="title"], [class*="modalTitle"] {
+                color: ${headerPrimary} !important;
             }
 
             /* Custom CSS added by the user */
